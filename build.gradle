@@ -1,23 +1,7 @@
-buildscript {
-    repositories {
-        jcenter()
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-    }
-
-    dependencies {
-        classpath 'ru.vyarus:gradle-quality-plugin:2.2.0'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
-        classpath 'net.researchgate:gradle-release:2.4.0'
-        classpath 'org.twitter4j:twitter4j-core:4.0.6'
-        classpath 'gradle.plugin.se.bjurr.gitchangelog:git-changelog-gradle-plugin:1.47'
-    }
+plugins {
+    id 'java-library'
+    id 'org.gradle.java.experimental-jigsaw' version '0.1.1'
 }
-
-import twitter4j.TwitterFactory
-import twitter4j.conf.ConfigurationBuilder
-import se.bjurr.gitchangelog.plugin.gradle.GitChangelogTask
 
 group 'io.github.sskorol'
 version = version
@@ -28,23 +12,18 @@ ext {
     projectUrl = "https://github.com/sskorol/test-data-supplier"
 }
 
-apply plugin: 'java'
-apply plugin: 'ru.vyarus.quality'
-apply plugin: 'se.bjurr.gitchangelog.git-changelog-gradle-plugin'
-apply from: "${gradleScriptDir}/bintray.gradle"
-apply from: "${gradleScriptDir}/release.gradle"
-apply from: "${gradleScriptDir}/maven-publish.gradle"
+javaModule.name = 'io.github.sskorol'
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+apply plugin: 'java'
+
+sourceCompatibility = JavaVersion.VERSION_1_9
+targetCompatibility = JavaVersion.VERSION_1_9
 
 repositories {
     jcenter()
 }
 
 configurations {
-    jacoco
-    jacocoRuntime
     agent
 }
 
@@ -53,39 +32,14 @@ dependencies {
     compile('org.testng:testng:6.11',
             'org.jooq:joor:0.9.6',
             'one.util:streamex:0.6.5',
-            'org.projectlombok:lombok:1.16.18',
             'io.vavr:vavr:0.9.0',
-            'org.aspectj:aspectjrt:1.8.10',
-            'org.slf4j:slf4j-simple:1.7.25'
-    )
-    testCompile 'org.assertj:assertj-core:3.8.0'
-    jacoco group: 'org.jacoco', name: 'org.jacoco.ant', version: '0.7.9', classifier: 'nodeps'
-    jacocoRuntime group: 'org.jacoco', name: 'org.jacoco.agent', version: '0.7.9', classifier: 'runtime'
+            'org.aspectj:aspectjrt:1.8.10')
+    testCompile('org.assertj:assertj-core:3.8.0',
+            'junit:junit:4.12')
 }
-
-sourceSets.main.output.classesDir = new File(buildDir, "classes/main")
 
 task wrapper(type: Wrapper) {
     gradleVersion '4.1'
-}
-
-task sourceJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allJava
-}
-
-tasks.withType(Javadoc) {
-    options.addStringOption('Xdoclint:none', '-quiet')
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives sourceJar
-    archives javadocJar
 }
 
 test {
@@ -95,90 +49,5 @@ test {
 
     useTestNG() {
         suites 'src/test/resources/smoke-suite.xml'
-    }
-}
-
-task gitChangelog(type: GitChangelogTask) {
-    filePath = "CHANGELOG.md"
-    templateContent = file('gradle/changelog.mustache').getText('UTF-8')
-}
-
-task instrument(dependsOn: ['classes']) {
-    ext.outputDir = buildDir.path + '/classes-instrumented'
-    doLast {
-        ant.taskdef(name: 'instrument',
-                classname: 'org.jacoco.ant.InstrumentTask',
-                classpath: configurations.jacoco.asPath)
-        ant.instrument(destdir: outputDir) {
-            fileset(dir: sourceSets.main.output.classesDir)
-        }
-    }
-}
-
-gradle.taskGraph.whenReady { graph ->
-    if (graph.hasTask(instrument)) {
-        tasks.withType(Test) {
-            doFirst {
-                systemProperty 'jacoco-agent.destfile', buildDir.path + '/jacoco/tests.exec'
-                classpath = files(instrument.outputDir) + classpath + configurations.jacocoRuntime
-            }
-        }
-    }
-}
-
-task report(dependsOn: ['instrument', 'test']) {
-    doLast {
-        ant.taskdef(name: 'report',
-                classname: 'org.jacoco.ant.ReportTask',
-                classpath: configurations.jacoco.asPath)
-        ant.report() {
-            executiondata {
-                ant.file(file: buildDir.path + '/jacoco/tests.exec')
-            }
-            structure(name: 'Coverage Report') {
-                classfiles {
-                    fileset(dir: sourceSets.main.output.classesDir)
-                }
-                sourcefiles {
-                    fileset(dir: 'src/main/java')
-                }
-            }
-            html(destdir: buildDir.path + '/reports/jacoco')
-            xml(destfile: buildDir.path + '/reports/jacoco/report.xml')
-        }
-    }
-}
-
-task tweet(type: Tweet)
-afterReleaseBuild.dependsOn tweet, gitChangelog
-
-class Tweet extends DefaultTask {
-
-    String consumerKey = project.hasProperty('consumerKey') ? project.property('consumerKey') : System.getenv('CONSUMER_KEY')
-    String consumerSecret = project.hasProperty('consumerSecret') ? project.property('consumerSecret') : System.getenv('CONSUMER_SECRET')
-    String accessToken = project.hasProperty('accessToken') ? project.property('accessToken') : System.getenv('ACCESS_TOKEN')
-    String accessTokenSecret = project.hasProperty('accessTokenSecret') ? project.property('accessTokenSecret') : System.getenv('ACCESS_TOKEN_SECRET')
-    String releaseVersion = project.hasProperty('release.releaseVersion') ? project.property('release.releaseVersion') : System.getenv('RELEASE_VERSION')
-
-    @TaskAction
-    def updateStatus() {
-        if (consumerKey != null && consumerSecret != null && accessToken != null && accessTokenSecret != null && releaseVersion != null) {
-            String tweet = "Test Data Supplier ${releaseVersion} has been released: ${project.projectUrl} #testng #testdatasupplier #java"
-
-            ConfigurationBuilder builder = new ConfigurationBuilder()
-            builder.setDebugEnabled(true)
-                    .setOAuthConsumerKey(consumerKey)
-                    .setOAuthConsumerSecret(consumerSecret)
-                    .setOAuthAccessToken(accessToken)
-                    .setOAuthAccessTokenSecret(accessTokenSecret)
-
-            new TwitterFactory(builder.build())
-                    .getInstance()
-                    .updateStatus(tweet)
-
-            println "Release tweet has been published."
-        } else {
-            println "You should provide Twitter keys / secrets to perform status update."
-        }
     }
 }

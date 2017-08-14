@@ -2,7 +2,6 @@ package io.github.sskorol.model;
 
 import io.github.sskorol.core.DataSupplier;
 import io.vavr.Tuple;
-import lombok.Getter;
 import one.util.streamex.DoubleStreamEx;
 import one.util.streamex.IntStreamEx;
 import one.util.streamex.LongStreamEx;
@@ -32,16 +31,13 @@ import static java.util.Optional.ofNullable;
  */
 public class DataSupplierMetaData {
 
-    @Getter
     private final Method testMethod;
-    @Getter
     private final Method dataSupplierMethod;
-    @Getter
     private final List<Object[]> testData;
     private final boolean isExtractable;
     private final ITestContext context;
 
-    public DataSupplierMetaData(final ITestContext context, final Method testMethod) {
+    public DataSupplierMetaData(final ITestContext context, final Method testMethod) throws NoSuchMethodException {
         this.context = context;
         this.testMethod = testMethod;
 
@@ -56,6 +52,18 @@ public class DataSupplierMetaData {
                 .map(DataSupplier::extractValues)
                 .orElse(false);
         this.testData = transform();
+    }
+
+    public Method getTestMethod() {
+        return testMethod;
+    }
+
+    public Method getDataSupplierMethod() {
+        return dataSupplierMethod;
+    }
+
+    public List<Object[]> getTestData() {
+        return testData;
     }
 
     private List<Object[]> transform() {

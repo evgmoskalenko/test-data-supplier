@@ -4,7 +4,6 @@ import io.github.sskorol.core.DataSupplier;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import io.vavr.control.Try;
-import lombok.SneakyThrows;
 import one.util.streamex.StreamEx;
 
 import java.lang.reflect.Method;
@@ -22,8 +21,7 @@ public final class ReflectionUtils {
         throw new UnsupportedOperationException("Illegal access to private constructor");
     }
 
-    @SneakyThrows(NoSuchMethodException.class)
-    public static Method getMethod(final Class<?> targetClass, final String targetMethodName) {
+    public static Method getMethod(final Class<?> targetClass, final String targetMethodName) throws NoSuchMethodException {
         final Tuple2<String, Class<?>[]> metaData = StreamEx.of(targetClass.getMethods())
                                             .map(m -> Tuple.of(m, m.getDeclaredAnnotation(DataSupplier.class)))
                                             .filter(t -> Objects.nonNull(t._2)

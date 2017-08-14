@@ -19,12 +19,12 @@ import static java.util.Optional.ofNullable;
 public class DataProviderTransformer implements IAnnotationTransformer {
 
     @DataProvider
-    public Iterator<Object[]> supplySeqData(final ITestContext context, final Method testMethod) {
+    public Iterator<Object[]> supplySeqData(final ITestContext context, final Method testMethod) throws NoSuchMethodException {
         return getMetaData(context, testMethod).getTestData().iterator();
     }
 
     @DataProvider(parallel = true)
-    public Iterator<Object[]> supplyParallelData(final ITestContext context, final Method testMethod) {
+    public Iterator<Object[]> supplyParallelData(final ITestContext context, final Method testMethod) throws NoSuchMethodException {
         return getMetaData(context, testMethod).getTestData().iterator();
     }
 
@@ -43,7 +43,7 @@ public class DataProviderTransformer implements IAnnotationTransformer {
         }
     }
 
-    private DataSupplierMetaData getMetaData(final ITestContext context, final Method testMethod) {
+    private DataSupplierMetaData getMetaData(final ITestContext context, final Method testMethod) throws NoSuchMethodException {
         return new DataSupplierMetaData(context, testMethod);
     }
 }

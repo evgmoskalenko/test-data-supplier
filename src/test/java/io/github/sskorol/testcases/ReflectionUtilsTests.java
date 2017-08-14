@@ -1,8 +1,8 @@
 package io.github.sskorol.testcases;
 
-import io.github.sskorol.utils.ReflectionUtils;
 import io.github.sskorol.datasuppliers.ExternalDataSuppliers;
 import io.github.sskorol.utils.ServiceLoaderUtils;
+import io.github.sskorol.utils.ReflectionUtils;
 import org.testng.annotations.Test;
 
 import static io.github.sskorol.utils.ReflectionUtils.getMethod;
@@ -24,7 +24,7 @@ public class ReflectionUtilsTests {
     }
 
     @Test(expectedExceptions = NoSuchMethodException.class)
-    public void shouldThrowAnExceptionOnNonExistingMethodAccess() {
+    public void shouldThrowAnExceptionOnNonExistingMethodAccess() throws NoSuchMethodException {
         getMethod(ExternalDataSuppliers.class, "missingMethodName");
     }
 
