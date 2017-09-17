@@ -17,4 +17,29 @@ public class User {
     public String getPassword() {
         return password;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        User user = (User) o;
+
+        return name.equals(user.name) && password.equals(user.password);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + password.hashCode();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "User(" +
+                "name=" + name +
+                ", password=" + password +
+                ")";
+    }
 }

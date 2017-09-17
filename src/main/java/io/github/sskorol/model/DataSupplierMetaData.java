@@ -54,14 +54,6 @@ public class DataSupplierMetaData {
         this.testData = transform();
     }
 
-    public Method getTestMethod() {
-        return testMethod;
-    }
-
-    public Method getDataSupplierMethod() {
-        return dataSupplierMethod;
-    }
-
     public List<Object[]> getTestData() {
         return testData;
     }

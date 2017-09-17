@@ -1,6 +1,5 @@
 plugins {
     id 'java-library'
-    id 'org.gradle.java.experimental-jigsaw' version '0.1.1'
 }
 
 group 'io.github.sskorol'
@@ -10,9 +9,8 @@ description 'Test Data Supplier is an extended version of common TestNG DataProv
 ext {
     gradleScriptDir = "${rootProject.projectDir}/gradle"
     projectUrl = "https://github.com/sskorol/test-data-supplier"
+    moduleName = 'io.github.sskorol'
 }
-
-javaModule.name = 'io.github.sskorol'
 
 apply plugin: 'java'
 
@@ -23,31 +21,57 @@ repositories {
     jcenter()
 }
 
-configurations {
-    agent
-}
-
 dependencies {
-    agent 'org.aspectj:aspectjweaver:1.8.10'
-    compile('org.testng:testng:6.11',
+    implementation('org.testng:testng:6.11',
             'org.jooq:joor:0.9.6',
             'one.util:streamex:0.6.5',
-            'io.vavr:vavr:0.9.0',
-            'org.aspectj:aspectjrt:1.8.10')
-    testCompile('org.assertj:assertj-core:3.8.0',
-            'junit:junit:4.12')
+            'io.vavr:vavr:0.9.0')
+    testImplementation('org.assertj:assertj-core:3.8.0')
+}
+
+compileJava {
+    inputs.property("moduleName", moduleName)
+    doFirst {
+        options.compilerArgs = [
+                '--module-path', classpath.asPath
+        ]
+        classpath = files()
+    }
+}
+
+compileTestJava {
+    inputs.property("moduleName", moduleName)
+    doFirst {
+        options.compilerArgs = [
+                '--module-path', classpath.asPath,
+                '--patch-module', "$moduleName=" + files(sourceSets.test.java.srcDirs).asPath,
+        ]
+        classpath = files()
+    }
+}
+
+test {
+    useTestNG() {
+        suites 'src/test/resources/smoke-suite.xml'
+    }
+
+    inputs.property("moduleName", moduleName)
+    doFirst {
+        jvmArgs = [
+                '--module-path', classpath.asPath,
+                '--add-modules', 'ALL-MODULE-PATH',
+                '--add-opens', 'io.github.sskorol/io.github.sskorol.testcases=testng',
+                '--add-opens', 'io.github.sskorol/io.github.sskorol.testcases=joor',
+                '--add-opens', 'io.github.sskorol/io.github.sskorol.datasuppliers=joor',
+                '--add-opens', 'io.github.sskorol/io.github.sskorol.datasuppliers=testng',
+                '--add-opens', 'java.base/java.util=streamex',
+                '--add-opens', 'java.base/java.util.stream=streamex',
+                '--patch-module', "$moduleName=" + files(sourceSets.test.java.outputDir).asPath
+        ]
+        classpath = files()
+    }
 }
 
 task wrapper(type: Wrapper) {
     gradleVersion '4.1'
-}
-
-test {
-    doFirst {
-        jvmArgs "-javaagent:${configurations.agent.singleFile}"
-    }
-
-    useTestNG() {
-        suites 'src/test/resources/smoke-suite.xml'
-    }
 }
