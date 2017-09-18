@@ -13,6 +13,7 @@ ext {
 }
 
 apply plugin: 'java'
+apply plugin: 'jacoco'
 
 sourceCompatibility = JavaVersion.VERSION_1_9
 targetCompatibility = JavaVersion.VERSION_1_9
@@ -69,6 +70,16 @@ test {
                 '--patch-module', "$moduleName=" + files(sourceSets.test.java.outputDir).asPath
         ]
         classpath = files()
+    }
+}
+
+jacocoTestReport {
+    executionData = files("${project.buildDir}/jacoco/test.exec")
+    reports {
+        xml.enabled true
+        xml.destination "${buildDir}/reports/jacoco/report.xml"
+        html.enabled true
+        html.destination "${buildDir}/jacocoHtml"
     }
 }
 

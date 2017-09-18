@@ -166,33 +166,7 @@ Check **io.github.sskorol.testcases** package for more examples.
 
 ### Tracking meta-data
 
-**DataSupplierInterceptor** interface allows tracking original **DataProvider** method calls for accessing additional meta-data. You can use the following snippet for getting required info:
-```java
-public class DataSupplierInterceptorImpl implements DataSupplierInterceptor {
-    
-    private static final Map<Method, DataSupplierMetaData> META_DATA = new ConcurrentHashMap<>();
-    
-    @Override
-    public void beforeDataPreparation(final ITestContext context, final Method method) {
-    }
-    
-    @Override
-    public void afterDataPreparation(final ITestContext context, final Method method) {
-    }
-    
-    @Override
-    public void onDataPreparation(final DataSupplierMetaData testMetaData) {
-        META_DATA.putIfAbsent(testMetaData.getTestMethod(), testMetaData);
-    }
-    
-    @Override
-    public Collection<DataSupplierMetaData> getMetaData() {
-        return META_DATA.values();
-    }
-}
-```
-
-This class should be then loaded via SPI mechanism. Just create **META-INF/services** folder in **resources** root, and add a new file **io.github.sskorol.core.DataSupplierInterceptor** with a full path to implementation class.
+Not supported in JDK 9 yet. Stay tuned.
 
 ## IntelliJ IDEA support
 
