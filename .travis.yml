@@ -5,6 +5,11 @@ language: java
 jdk:
   - oraclejdk9
 
+branches:
+  only:
+    - master
+    - 35-java-9-support
+
 script:
   - ./gradlew clean report build
 
