@@ -32,8 +32,7 @@ dependencies {
 
 compileJava {
     inputs.property("moduleName", moduleName)
-    doFirst {
-        options.compilerArgs = [
+    doFirst {        options.compilerArgs = [
                 '--module-path', classpath.asPath
         ]
         classpath = files()
@@ -77,12 +76,12 @@ jacocoTestReport {
     executionData = files("${project.buildDir}/jacoco/test.exec")
     reports {
         xml.enabled true
-        xml.destination "${buildDir}/reports/jacoco/report.xml"
+        xml.destination file("${buildDir}/reports/jacoco/report.xml")
         html.enabled true
-        html.destination "${buildDir}/jacocoHtml"
+        html.destination file("${buildDir}/jacocoHtml")
     }
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion '4.1'
+    gradleVersion '4.2'
 }
